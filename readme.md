@@ -173,7 +173,7 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
 #### 订单明细表
 
-![1541316322871](C:\Users\Wychencr\AppData\Local\Temp\1541316322871.png)
+![](https://ws1.sinaimg.cn/large/e4eff812gy1fww7i3xn4pj20rf0ak101.jpg)
 
 可以使用用户id和订单号组合索引。
 
@@ -234,8 +234,61 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
 ### 初始化Git仓库
 
-- 在Github上新建仓库happymmall，然后clone到本地的工程文件夹
-- 
+- 在Github上新建仓库**happymmall**，然后clone到本地的工程文件夹HappyMMall
+
+  ```
+  git clone git@github.com:wychencr/happymmall.git
+  cd happymmall
+  ```
+
+- 添加**.gitignore**文件
+
+  ```
+  *.class
+  
+  # package file
+  *.war
+  *.ear
+  
+  # kdiff3 ignore
+  *.org
+  
+  # maven ignore
+  target/
+  
+  # eclipse ignore
+  .settings/
+  .project
+  .classpatch
+  
+  # idea
+  .idea/
+  /idea/
+  *.ipr
+  *.iml
+  *.iws
+  
+  # temp file
+  *.log
+  *.cache
+  *.diff
+  *.patch
+  *.tmp
+  
+  # system ignore
+  .DS_Store
+  Thumbs.db
+  ```
+
+- 再添加项目文件、readme.md等，commit后push到远程仓库中
+
+  ```
+  git add -A
+  git commit -m "add some files"
+  git push
+  ```
+
+  
 
 
 
