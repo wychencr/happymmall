@@ -288,7 +288,23 @@ decimal(20， 2)表示18个整数位，两个小数位。
   git push
   ```
 
+- 分支开发，主干发布
+
+  ```
+  # 查看本地和远程分支
+  git branch
+  git branch -r
+  
+  # 新建一个分支，并切换到该分支
+  git checkout -b v1.0 origin/master
+  
+  # 推送到远程分支
+  git push origin HEAD -u
+  ```
+
   
 
+### 配置pom.xml
 
+### 项目包结构初始化
 
