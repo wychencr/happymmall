@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:tx="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/aop
+                        http://www.springframework.org/schema/aop/spring-aop.xsd
+                        http://www.springframework.org/schema/tx
+                        http://www.springframework.org/schema/tx/spring-tx.xsd
+                        http://www.springframework.org/schema/mvc
+                        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+                        http://www.springframework.org/schema/cache
+                        http://www.springframework.org/schema/cache/spring-cache.xsd
+                        http://www.springframework.org/schema/context
+                        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- 自动扫描包 包括了控制层和服务层 -->
+    <context:component-scan base-package="com.cr" />
+    <!-- 引入数据库配置文件 -->
+    <bean id="propertyConfigurer"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:jdbc.properties" />
+    </bean>
+
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="${mysql.driver}" />
+        <property name="url" value="${mysql.url}" />
+        <property name="username" value="${mysql.username}" />
+        <property name="password" value="${mysql.password}" />
+
+
+        <property name="initialSize" value="${dbcp.initialSize}" />
+        <property name="maxActive" value="${dbcp.maxActive}" />
+        <property name="maxIdle" value="${dbcp.maxIdle}" />
+        <property name="minIdle" value="${dbcp.minIdle}" />
+        <property name="maxWait" value="${dbcp.maxWait}" />
+    </bean>
+
+    <!-- 整合Spring和MyBatis，就不需要之前的mybatis配置文件了 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <!-- 自动扫描mapping.xml文件 注意路径是"/"不是"."-->
+        <property name="mapperLocations" value="classpath:com/cr/mapper/*.xml" />
+        <property name="configuration">
+            <!--可以将之前mybatis.cfg.xml的一些配置项转移到这里来-->
+            <bean class="org.apache.ibatis.session.Configuration">
+                <property name="mapUnderscoreToCamelCase" value="true" />
+            </bean>
+        </property>
+    </bean>
+
+    <!-- 扫描DAO持久层接口 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.cr.mapper" />
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+    </bean>
+
+    <!-- 数据库事务管理 -->
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+</beans>

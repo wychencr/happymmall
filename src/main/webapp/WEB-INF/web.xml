@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
+
+    <!-- Spring配置 -->
+    <!-- ================================================= -->
+    <!--配置Spring IoC的配置文件路径 classpath相当于resources文件夹-->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:spring/applicationContext.xml</param-value>
+    </context-param>
+    <!--Log4j配置-->
+    <context-param>
+        <param-name>log4jRefreshInterval</param-name>
+        <param-value>60000</param-value>
+    </context-param>
+    <!--配置ContextLoaderListener初始化IOC容器-->
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+    <!-- 防止Spring内存溢出监听器 -->
+    <listener>
+        <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
+    </listener>
+
+    <!-- Spring mvc配置 -->
+    <!-- ================================================= -->
+    <!--DispatcherServlet前置控制器配置-->
+    <servlet>
+        <!--springmvc框架默认自动找到/WEB-INF/springmvc-servlet.xml作为配置文件载入web工程中 这里手动设置位置-->
+        <servlet-name>springmvc</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>classpath:spring/springmvc-servlet.xml</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+        <async-supported>true</async-supported>
+    </servlet>
+    <!--拦截内容：servlet映射设置-->
+    <servlet-mapping>
+        <servlet-name>springmvc</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+</web-app>
