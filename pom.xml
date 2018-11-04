@@ -266,14 +266,15 @@
     <dependency>
       <groupId>commons-configuration</groupId>
       <artifactId>commons-configuration</artifactId>
-      <version>1.10</version>
+      <version>1.6</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/commons-lang/commons-lang -->
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
-      <version>2.6</version>
+      <version>2.4</version>
     </dependency>
+
 
     <dependency>
       <groupId>commons-logging</groupId>
@@ -283,12 +284,13 @@
     <dependency>
       <groupId>com.google.zxing</groupId>
       <artifactId>core</artifactId>
-      <version>2.1</version>
+      <version>3.3.0</version>
     </dependency>
+
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.3.1</version>
+      <version>2.8.2</version>
     </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
@@ -344,6 +346,21 @@
           <configuration>
             <verbose>true</verbose>
             <overwrite>true</overwrite>
+          </configuration>
+        </plugin>
+
+        <!-- geelynote maven的核心插件之-complier插件默认只支持编译Java 1.4，因此需要加上支持高版本jre的配置，在pom.xml里面加上 增加编译插件 -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <source>1.8</source>
+            <target>1.8</target>
+            <encoding>UTF-8</encoding>
+            <!--将支付宝的sdk放到lib中-->
+            <compilerArguments>
+              <extdirs>${project.basedir}/src/main/webapp/WEB-INF/lib</extdirs>
+            </compilerArguments>
           </configuration>
         </plugin>
       </plugins>
