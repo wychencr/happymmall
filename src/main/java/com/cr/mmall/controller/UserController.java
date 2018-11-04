@@ -1,7 +1,7 @@
-package com.cr.controller;
+package com.cr.mmall.controller;
 
-import com.cr.pojo.User;
-import com.cr.service.UserService;
+import com.cr.mmall.pojo.User;
+import com.cr.mmall.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;

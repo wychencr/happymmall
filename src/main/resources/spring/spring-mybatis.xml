@@ -19,7 +19,7 @@
                         http://www.springframework.org/schema/context/spring-context.xsd">
 
     <!-- 自动扫描包 包括了控制层和服务层 -->
-    <context:component-scan base-package="com.cr" />
+    <context:component-scan base-package="com.cr.mmall" />
     <!-- 引入数据库配置文件 -->
     <bean id="propertyConfigurer"
           class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
@@ -55,7 +55,7 @@
 
     <!-- 扫描DAO持久层接口 -->
     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-        <property name="basePackage" value="com.cr.mapper" />
+        <property name="basePackage" value="com.cr.mmall.mapper" />
         <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
     </bean>
 

@@ -1,4 +1,4 @@
-package com.cr.pojo;
+package com.cr.mmall.pojo;
 
 
 public class User {

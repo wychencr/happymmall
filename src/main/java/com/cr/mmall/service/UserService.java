@@ -1,6 +1,6 @@
-package com.cr.service;
+package com.cr.mmall.service;
 
-import com.cr.pojo.User;
+import com.cr.mmall.pojo.User;
 
 public interface UserService {
     /**

@@ -1,8 +1,8 @@
-package com.cr.service.impl;
+package com.cr.mmall.service.impl;
 
-import com.cr.mapper.UserMapper;
-import com.cr.pojo.User;
-import com.cr.service.UserService;
+import com.cr.mmall.pojo.User;
+import com.cr.mmall.service.UserService;
+import com.cr.mmall.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
