@@ -314,4 +314,22 @@ decimal(20， 2)表示18个整数位，两个小数位。
 - 在SSM工程的基础上，要修改好tomcat和module配置
 - logback日志配置
 - ftp服务器属性配置
+- 修改IDEA设置，`spring core` `code` `autowriting for bean class` 为 **warning**
 
+### chrome插件安装
+
+- WEB前端助手(FeHelper)
+
+  ```
+  包括JSON格式化、二维码生成与解码、信息编解码、代码压缩、美化、页面取色、Markdown与HTML互转、网页滚动截屏、正则表达式、时间转换工具、编码规范检测、页面性能检测、Ajax接口调试、密码生成器、JSON比对工具、网页编码设置
+  ```
+
+  
+
+- Restlet Client
+
+  ```
+  Visually create and run single HTTP requests
+  ```
+
+  
