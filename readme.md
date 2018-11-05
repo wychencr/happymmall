@@ -312,4 +312,6 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
 - 在WEB-INF下需要额外建立一个lib文件夹，存放支付宝的SDK包
 - 在SSM工程的基础上，要修改好tomcat和module配置
+- logback日志配置
+- ftp服务器属性配置
 
