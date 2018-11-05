@@ -110,7 +110,7 @@
     <dependency>
       <groupId>com.github.pagehelper</groupId>
       <artifactId>pagehelper</artifactId>
-      <version>5.1.2</version>
+      <version>4.1.0</version>
     </dependency>
     <!-- 处理时间日期格式 -->
     <dependency>
