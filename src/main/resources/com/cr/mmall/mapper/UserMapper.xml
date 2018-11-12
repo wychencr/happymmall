@@ -15,6 +15,8 @@
       <arg column="update_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
     </constructor>
   </resultMap>
+
+  <!--设置要查询的字段-->
   <sql id="Base_Column_List" >
     id, username, password, email, phone, question, answer, role, create_time, update_time
   </sql>
@@ -166,7 +168,6 @@
 
   <select id="selectLogin" resultMap="BaseResultMap" parameterType="map">
     SELECT
---     *???//这样真的好么?答案就是,这样不好.
     <include refid="Base_Column_List" />
     from mmall_user
     where username = #{username}
