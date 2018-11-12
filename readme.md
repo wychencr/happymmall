@@ -332,4 +332,20 @@ decimal(20， 2)表示18个整数位，两个小数位。
   Visually create and run single HTTP requests
   ```
 
-  
+
+
+## 四、用户模块开发
+
+### 横向越权与纵向越权
+
+- 横向越权：攻击者尝试访问与他拥有相同权限的用户的资源，比如A用户尝试查询B用户的订单号
+- 纵向越权：低级别攻击者尝试访问高级别用户的资源，比如普通用户通过分析接口尝试上升到管理员级别
+
+### 门户用户接口设计
+
+- [链接](https://gitee.com/imooccode/happymmallwiki/wikis/%E9%97%A8%E6%88%B7_%E7%94%A8%E6%88%B7%E6%8E%A5%E5%8F%A3?sort_id=9917)
+
+### 后台用户接口设计
+
+- [链接](https://gitee.com/imooccode/happymmallwiki/wikis/%E5%90%8E%E5%8F%B0_%E7%94%A8%E6%88%B7%E6%8E%A5%E5%8F%A3?sort_id=9912)
+
