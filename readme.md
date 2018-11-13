@@ -355,7 +355,7 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
 - 在common包下创建三个类，Const，ResponseCode，ServerResponse，ResponseCode是一个枚举类，包含了不同的状态信息和状态码；ServerResponse实现了序列化接口，包含了三个字段，分别是状态码，状态信息，和泛型的数据，通过不同的静态方法create*方法就可以给这三个字段赋值，并返回新的ServerResponse对象
 - 服务层UserServiceImpl中注入UserMapper方法，有一个login登录方法，参数为用户名和密码，返回的是ServerResponse <User>类型。login方法中通过UserMapper接口检查数据库，判断用户名是否错误，密码是否错误，如果都正确，从数据库中查询到对应的User对象返回到ServerResponse的data字段中，状态消息msg为“登录成功“，状态码status为0
-- 控制层的UserController类中注入了服务层的IUserService，含有login方法，uri对应为/login/login，限定post方法，返回值为ServerResponse<User>。根据前端传来的username和password方法，调用IUserService的login方法，获得ServerResponse <User>实例，通过isSuccess方法(状态码是否为0)判断是否登录成功，如果是则通过getData()方法将data(即User讯息)传给httpsession
+- 控制层的UserController类中注入了服务层的IUserService，含有login方法，uri对应为/login/login，限定post方法，返回值为ServerResponse<User>，使用**@ResponseBody**注解实现将Controller类方法返回对象转换为json响应给客户端(在springmvc-servlet.xml已经配置了HttpMessageConverter和JSON消息转换器)。根据前端传来的username和password方法，调用IUserService的login方法，获得ServerResponse <User>实例，通过isSuccess方法(状态码是否为0)判断是否登录成功，如果是则通过getData()方法将data(即User讯息)传给httpsession
 
 ### 登出功能
 
@@ -373,3 +373,24 @@ decimal(20， 2)表示18个整数位，两个小数位。
 - 服务层UserServiceImpl类中添加checkValid方法，参数为String型的str和type，如果type是“username”，则将str作为username在数据库中查找是否重复；如果type是“email”，则将str作为email在数据库中查找是否重复
 - 控制器UserController类中添加checkValid方法，uri为/login/check_valid
 
+### 获取用户登录信息
+
+- 控制器UserController类中添加getUserInfo方法，通过session.getAttribute中获取User信息
+
+### 忘记密码
+
+#### 1、找到密保问题
+
+- 服务层UserServiceImpl类中添加selectQuestion方法，校验用户名是否存在，如果有则查询数据库中的密码提示问题，将问题作为data返回即可
+- 控制器UserController中调用服务层的selectQuestion方法
+
+#### 2、检验密保问题是否正确
+
+- common包下添加TokenCache类，可以调用其setKey方法将key：token_username和value：randomUUID放入**本地缓存**中也可以通过getKey方法查询value值
+- 服务层UserServiceImpl类中添加checkAnswer方法，验证用户名-问题-答案在数据库中是否匹配，如果是，则生成一个随机的uuid，与token_username形成键值对，加入到本地缓存中，并将uuid作为data返回；如果否则显示密码错误
+- 控制器UserController中调用服务层的checkAnswer方法，将**token**返回到前端，修改密码的时候需要用这个 
+
+#### 3、重置新密码
+
+- 服务层UserServiceImpl类中添加resetPassword方法，传入的参数为用户名、新密码、forgetToken，首先检查传入的forgetToken是否为空白，然后检查用户名有效性，再根据用户名查询本地缓存中的token，再比较本地的token和传入的forgetToken是否一致，如果是则更新密码，把新密码MD5加密后更新到数据库中
+- 控制器UserController中调用服务层的forgetResetPassword方法返回即可
