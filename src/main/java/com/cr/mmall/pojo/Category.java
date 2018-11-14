@@ -88,6 +88,11 @@ public class Category {
     }
 
 
+    /**
+     * 使用set集合去重，所以这里重写了category的hashcode和equals方法
+     * 仅根据id来判断是否重复就可以了
+     */
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

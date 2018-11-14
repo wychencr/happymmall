@@ -14,7 +14,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
 @Controller
-@RequestMapping(value = "/manager/user")
+@RequestMapping(value = "/manage/user")
 public class UserManagerController {
     @Resource
     private IUserService iUserService;

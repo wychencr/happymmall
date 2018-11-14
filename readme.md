@@ -414,7 +414,7 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
 #### 3、根据用户ID获取登录用户信息
 
-- 如果未登录，则返回status=10，前端可以强制跳转到登录界面
+- 如果未登录，则返回status=10，**前端可以强制跳转到登录界面**
 
 - 服务层通过userId从数据库查询用户信息
 - 控制器中先判断用户是否登录，如果是则从session中获取User对象，再通过userId调用服务层方法查询数据库，得到的User信息返回给前端
@@ -424,3 +424,94 @@ decimal(20， 2)表示18个整数位，两个小数位。
 - controller/backend包下添加UserManagerController类，注入服务层实现类iUserService，添加login方法
 - 在login方法中，首先调用iUserService的login方法，判断是否登录成功，如果成功，则根据role判定是否为管理员
 
+
+
+## 五、分类管理模块
+
+### 分类接口设计
+
+- 后台分类接口
+
+  [链接](https://gitee.com/imooccode/happymmallwiki/wikis/%E5%90%8E%E5%8F%B0_%E5%93%81%E7%B1%BB%E6%8E%A5%E5%8F%A3?sort_id=9911)
+
+### 添加品类
+
+- 根据传入的品类名称和父节点ID类添加品类
+- 控制器中首先检查管理员是否登录，如果登录调用服务层以下的方法
+- 首先需要检查传入参数的有效性，如果为空则返回参数错误，之后new一个Category对象，设置品类名称、父节点ID和状态，然后调用categoryMapper的insert方法，插入category到数据库
+
+### 更改品类名称
+
+- 传入参数为品类ID和品类名，将根据这个ID来修改品类名
+- 控制器中首先检查管理员是否登录，如果登录调用服务层以下的方法
+- 首先需要检查传入参数的有效性，如果为空则返回参数错误，之后new一个Category对象，设置品类名称、品类ID，然后调用categoryMapper的updateByPrimaryKeySelective方法，更新品类名到数据库
+
+### 查询次级子节点品类
+
+- 传入参数为品类ID，将根据这个ID来查询其所有的次级子节点品类，返回值类型为ServerResponse <List <Category>> (在正确查询的情况下，否则返回错误消息)
+- 控制器中首先检查管理员是否登录，如果登录调用服务层getChildrenParallelCategory方法
+- 首先需要检查传入参数的有效性，如果为空则返回参数错误，然后调用categoryMapper的selectCategoryChildrenByParentId方法，将查到的List <Category>作为data返回
+
+### 查询当前节点和所有子节点
+
+- 传入参数为品类ID，将根据这个ID来查询当前节点和所有子节点的ID值，放到list中，作为data返回
+
+- 控制器中首先检查管理员是否登录，如果登录调用服务层的selectCategoryAndChildrenById方法
+
+- 服务层的findChildCategory方法，参数为set(去重，使用set要重写category  pojo的hashcode和equal方法，以id为判断准则)，每次根据id来从数据库查找category对象，如果存在则加入到set中，然后查找数据库中所有以当前节点为父节点的子节点，存储到list中，然后遍历子节点，循环调用findChildCategory方法，如果当前节点没有子节点了，那么遍历的过程也不会进入，最后返回set，即查到了所有的子节点和当前节点，代码如下：
+
+  ```java
+  // 递归算法，算出左右的子节点
+      private Set<Category> findChildCategory(Set<Category> categorySet, Integer categoryId) {
+          // 查找当前节点，加入到Set中
+          Category category = categoryMapper.selectByPrimaryKey(categoryId);
+          if (category != null) {
+              categorySet.add(category);
+          }
+          // 查找次级所有子节点
+          List<Category> categoryList = categoryMapper.selectCategoryChildrenByParentId(categoryId);
+          // 如果查不到子节点，则不会执行以下循环；如果查到了，则遍历子节点，递归
+          for (Category categoryItem : categoryList) {
+              findChildCategory(categorySet, categoryItem.getId());
+          }
+          return categorySet;
+      }
+  ```
+
+- 服务层的selectCategoryAndChildrenById方法，先初始化一个空set，然后根据传入的categoryId，调用findChildCategory方法，之后再把set中所有的category的id提取到一个list中，作为ServerResponse的data返回，代码如下;
+
+  ```java
+   public  ServerResponse selectCategoryAndChildrenById(Integer categoryId) {
+          Set<Category> categorySet = Sets.newHashSet();
+          findChildCategory(categorySet, categoryId);
+  
+          // 将set转为list返回
+          List<Integer> categoryIdList = Lists.newArrayList();
+          if (categoryId != null) {
+              for (Category categoryItem : categorySet) {
+                  categoryIdList.add(categoryItem.getId());
+              }
+          }
+          return ServerResponse.createBySuccess(categoryIdList);
+      }
+  ```
+
+  
+
+
+
+
+
+
+
+
+
+## 六、商品管理模块
+
+## 七、购物车模块
+
+## 八、收货地址管理模块
+
+## 九、支付模块
+
+## 十、订单管理模块

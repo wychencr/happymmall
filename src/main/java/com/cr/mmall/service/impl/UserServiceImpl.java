@@ -7,13 +7,10 @@ import com.cr.mmall.mapper.UserMapper;
 import com.cr.mmall.pojo.User;
 import com.cr.mmall.service.IUserService;
 import com.cr.mmall.util.MD5Util;
-import jdk.nashorn.internal.parser.Token;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpSession;
 import java.util.UUID;
 
 @Service("iUserService")
@@ -190,5 +187,18 @@ public class UserServiceImpl implements IUserService {
         }
         user.setPassword(StringUtils.EMPTY);
         return ServerResponse.createBySuccess(user);
+    }
+
+
+    /**
+     * Backend
+     */
+    // 校验是不是管理员
+    @Override
+    public ServerResponse checkAdminRole(User user) {
+        if (user == null) {
+            return ServerResponse.createBySuccess();
+        }
+        return ServerResponse.createByError();
     }
 }
