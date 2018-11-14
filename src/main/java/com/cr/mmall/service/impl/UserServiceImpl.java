@@ -116,7 +116,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     public ServerResponse <String> resetPassword(String username, String passwordNew, String forgetToken) {
         // 检查传入的forgetToken是否为空白
-        if (org.apache.commons.lang3.StringUtils.isNotBlank(forgetToken)) {
+        if (org.apache.commons.lang3.StringUtils.isBlank(forgetToken)) {
             return ServerResponse.createByErrorMessage("参数错误，token需要传递");
         }
         // 检查用户名有效性
@@ -126,7 +126,7 @@ public class UserServiceImpl implements IUserService {
         }
         // 根据用户名查询本地缓存中的token
         String token = TokenCache.getKey(TokenCache.TOKEN_PREFIX + username);
-        if (org.apache.commons.lang3.StringUtils.isNotBlank(token)) {
+        if (org.apache.commons.lang3.StringUtils.isBlank(token)) {
             return ServerResponse.createByErrorMessage("token无效或者过期");
         }
         // 比较本地的token和传入的forgetToken是否一致 更新密码
