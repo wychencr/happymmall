@@ -387,10 +387,30 @@ decimal(20， 2)表示18个整数位，两个小数位。
 #### 2、检验密保问题是否正确
 
 - common包下添加TokenCache类，可以调用其setKey方法将key：token_username和value：randomUUID放入**本地缓存**中也可以通过getKey方法查询value值
-- 服务层UserServiceImpl类中添加checkAnswer方法，验证用户名-问题-答案在数据库中是否匹配，如果是，则生成一个随机的uuid，与token_username形成键值对，加入到本地缓存中，并将uuid作为data返回；如果否则显示密码错误
+- 服务层UserServiceImpl类中添加checkAnswer方法，验证用户名-问题-答案在数据库中是否匹配，如果是，则生成一个随机的uuid，与token_username形成键值对，加入到本地缓存中，并将token(uuid)作为data返回；如果否则显示密码错误
 - 控制器UserController中调用服务层的checkAnswer方法，将**token**返回到前端，修改密码的时候需要用这个 
 
 #### 3、重置新密码
 
 - 服务层UserServiceImpl类中添加resetPassword方法，传入的参数为用户名、新密码、forgetToken，首先检查传入的forgetToken是否为空白，然后检查用户名有效性，再根据用户名查询本地缓存中的token，再比较本地的token和传入的forgetToken是否一致，如果是则更新密码，把新密码MD5加密后更新到数据库中
 - 控制器UserController中调用服务层的forgetResetPassword方法返回即可
+
+### 登录状态
+
+#### 1、登录状态下重置密码
+
+- 服务层UserServiceImpl类中添加resetPassword方法，传入的参数为旧密码、新密码、用户。首先是验证旧密码是否正确，注意这里要**防止横向越权**，校验用户旧密码的同时，一定要同时校验用户名，否则容易被人用密码字典撞库，如果查不到则返回错误消息，否则下一步将新密码MD5加密更新到User中，再更新到数据库中
+- 控制器UserController中添加resetPassword方法，参数为旧密码、新密码和HttpSession，先从session中获取当前用户信息，如用户存在则调用上面的UserServiceImpl的resetPassword方法，否则返回“用户未登录”消息
+
+#### 2、更新个人信息 
+
+- 服务层UserServiceImpl类中添加updateInformation方法，传入的参数为User，其中username和userId被设置为当前登录用户的信息(username和userId是不可被修改部分，其他信息就来自于用户修改的信息，从前端传过来，此部分操作在控制器中执行)。然后首先要校验下email是否有效，如果email和当前登录用户的email不一致，则不能与数据库中其他用户的email重复。如果校验成功就可以new一个User实例updateUser，将可更新的内容赋给updateUser，然后调用userMapper的updateByPrimaryKeySelective方法，对非null的项，根据userId更新到数据库中。如果更新成功，则显示更新成功消息，并且把更新后的updateUser保存到data中，以便于在控制器中可以更新session参数
+- 控制器UserController中添加updateInformation方法，参数为HTTPSession和User，先检查用户是否登录，即session中是否有user信息。如果是，则把当前登录用户的用户名和ID赋给传进来的user，之后在调用服务层UserServiceImpl类中的updateInformation方法，如果更新成功，则将更新的用户对象存在session中，否则直接返回即可
+
+#### 3、根据用户ID获取登录用户信息
+
+- 一般用于更新用户信息之后，更新是把User信息放到session中，并没有返回到前端
+
+- 服务层通过userId从数据库查询用户信息
+- 控制器中先判断用户是否登录，如果是则从session中获取User对象，再通过userId调用服务层方法查询数据库，得到的User信息返回给前端
+

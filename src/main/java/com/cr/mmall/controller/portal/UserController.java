@@ -1,9 +1,11 @@
-package com.cr.mmall.controller;
+package com.cr.mmall.controller.portal;
 
 import com.cr.mmall.common.Const;
+import com.cr.mmall.common.ResponseCode;
 import com.cr.mmall.common.ServerResponse;
 import com.cr.mmall.pojo.User;
 import com.cr.mmall.service.IUserService;
+import com.sun.xml.internal.ws.resources.HttpserverMessages;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -92,4 +94,44 @@ public class UserController {
         return iUserService.resetPassword(username, passwordNew, forgetToken);
     }
 
+    // 登录状态下重置密码
+    @RequestMapping(value = "/reset_password", method = RequestMethod.GET)
+    @ResponseBody
+    public ServerResponse <String> resetPassword(String passwordOld, String passwordNew, HttpSession session) {
+        User user = (User) session.getAttribute(Const.CURRENT_USER);
+        if (user == null) {
+            return ServerResponse.createByErrorMessage("用户未登录");
+        }
+
+        return iUserService.resetPassword(passwordOld, passwordNew, user);
+    }
+
+    // 登录状态下更新用户信息
+    @RequestMapping(value = "/update_information", method = RequestMethod.GET)
+    @ResponseBody
+    public ServerResponse <User> updateInformation(HttpSession session, User user) {
+        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        if (currentUser == null) {
+            return ServerResponse.createByErrorMessage("用户未登录");
+        }
+        user.setId(currentUser.getId());
+        user.setUsername(currentUser.getUsername());
+
+        ServerResponse <User> response = iUserService.updateInformation(user);
+        if (response.isSuccess()) {
+            session.setAttribute(Const.CURRENT_USER, response.getData());
+        }
+        return response;
+    }
+
+    // 根据用户ID获取用户信息(一般用于更新用户信息之后)
+    @RequestMapping(value = "/get_information", method = RequestMethod.GET)
+    @ResponseBody
+    public ServerResponse <User> getInformation(HttpSession session) {
+        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        if (currentUser == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), "未登录，需要强制登录status=10");
+        }
+        return iUserService.getInformation(currentUser.getId());
+    }
 }

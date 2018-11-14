@@ -9,9 +9,11 @@ import com.cr.mmall.service.IUserService;
 import com.cr.mmall.util.MD5Util;
 import jdk.nashorn.internal.parser.Token;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
 import java.util.UUID;
 
 @Service("iUserService")
@@ -139,5 +141,54 @@ public class UserServiceImpl implements IUserService {
             return ServerResponse.createByErrorMessage("token错误，请重新获取重置密码的token");
         }
         return ServerResponse.createByErrorMessage("修改密码失败");
+    }
+
+    @Override
+    public ServerResponse <String> resetPassword(String passwordOld, String passwordNew, User user) {
+        // 防止横向越权，校验用户旧密码的同时，一定要校验用户名，否则容易被人用密码字典撞库
+        int resultCount = userMapper.checkPassword(MD5Util.MD5EncodeUtf8(passwordOld), user.getId());
+        if (resultCount > 0) {
+            return ServerResponse.createByErrorMessage("旧密码错误");
+        }
+        // 如果旧密码与用户名匹配成功，则设置好新密码，更新到数据库
+        user.setPassword(MD5Util.MD5EncodeUtf8(passwordNew));
+        int updateCount = userMapper.updateByPrimaryKeySelective(user);
+        if (updateCount > 0) {
+            return ServerResponse.createBySuccessMessage("密码更新成功");
+        }
+        return ServerResponse.createByErrorMessage("密码更新失败");
+    }
+
+    @Override
+    public ServerResponse <User> updateInformation(User user) {
+        // username不更新，email更新时需要检查是否重复(除前用户的email外)
+        int resultCount = userMapper.checkEmailByUserId(user.getEmail(), user.getId());
+        if (resultCount > 0) {
+            return ServerResponse.createByErrorMessage("email已存在，请更换email再尝试更新");
+        }
+        // updateUser将除username之外的信息都更新了
+        User updateUser = new User();
+        updateUser.setId(user.getId());
+        updateUser.setEmail(user.getEmail());
+        updateUser.setPhone(user.getPhone());
+        updateUser.setQuestion(user.getQuestion());
+        updateUser.setAnswer(user.getAnswer());
+
+        int updateCount = userMapper.updateByPrimaryKeySelective(updateUser);
+        if (updateCount > 0) {
+            return ServerResponse.createBySuccess("更新个人信息成功", updateUser);
+        }
+        return ServerResponse.createByErrorMessage("更新个人信息失败");
+
+    }
+
+    @Override
+    public ServerResponse <User> getInformation(Integer userId) {
+        User user = userMapper.selectByPrimaryKey(userId);
+        if (user == null) {
+            return ServerResponse.createByErrorMessage("找不到用户");
+        }
+        user.setPassword(StringUtils.EMPTY);
+        return ServerResponse.createBySuccess(user);
     }
 }
