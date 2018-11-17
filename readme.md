@@ -13,9 +13,11 @@
 
 ![](https://ws1.sinaimg.cn/large/e4eff812gy1fwvxv0zh4aj20gj0akmx5.jpg)
 
-- 点击**`启动`**按钮，浏览器访问**ftp://localhost/**，即可登录
+- 点击**`启动`**按钮，浏览器访问**[ftp://localhost/](ftp://localhost/)**，即可登录
 
 
+
+- **使用windows自带的IIS添加FTP的方法 [链接](https://www.cnblogs.com/popfisher/p/7992036.html)**，IIS启动后会与nginx冲突
 
 ### Nginx安装
 
@@ -496,17 +498,143 @@ decimal(20， 2)表示18个整数位，两个小数位。
       }
   ```
 
-  
-
-
-
-
-
-
-
 
 
 ## 六、商品管理模块
+
+### POJO、BO、VO
+
+![](https://ws1.sinaimg.cn/large/e4eff812ly1fx8mz27s65j20j309g3yh.jpg)
+
+### 产品接口设计
+
+- 后台产品接口
+
+  [链接](https://gitee.com/imooccode/happymmallwiki/wikis/%E5%90%8E%E5%8F%B0_%E4%BA%A7%E5%93%81%E6%8E%A5%E5%8F%A3?sort_id=9910)
+
+- 门户产品接口
+
+  [链接](https://gitee.com/imooccode/happymmallwiki/wikis/%E9%97%A8%E6%88%B7_%E4%BA%A7%E5%93%81%E6%8E%A5%E5%8F%A3?sort_id=9914)
+
+### 新增或更新产品
+
+- 传入参数为Product对象，如果是新增产品，则Product实例中的Id应该为空，这样就调用mapper接口的insert方法，来更新产品信息；如果是更新产品信息，则Id应该不为空，调用mapper的updateByPrimaryKey方法来更新产品信息，其中主图来自于子图的第一个
+- 控制器需要先验证用户是否登录并且具备管理员权限
+
+### 产品上下架
+
+- 传入参数为产品Id和状态status(表示在售、下架、删除)
+- 控制器需要先验证用户是否登录并且具备管理员权限
+- 服务层实现方法要先校验参数有效性，使用mapper接口的updateByPrimaryKeySelective来更新参数
+
+### 产品详情
+
+- 传入参数为产品Id，很据这个id返回产品详情，返回的产品详情相比于pojo中的product对象内容更加丰富，所以这里添加一个**vo(value object)**类，除了原来的product属性外，还添加了imageHost和parentCategoryId，同时创建时间和更新时间也需要转换成年月日的形式**(joda**)
+- 控制器需要先验证用户是否登录并且具备管理员权限
+- 服务层实现方法要先校验参数productId的有效性，然后检查这个id能否从数据库中查到product对象，如果查到了，将product装配到productDetailVo中，调用装配函数assembleProductDetailVo，参数为product，将productDetailVo作为data返回
+- assembleProductDetailVo返回值为ProductDetailVo，先装配product的各个属性，然后装配imageHost(ftp服务器url的前缀)，从属性文件中获取，再装配ParentId，根据当前产品的分类id来从数据库中查父节点分类ParentId，如果查不到当前分类，则将ParentId置为0
+
+### 商品列表动态分页
+
+- 传入参数为pageNum(默认=1)和pageSize(默认=10)，返回产品列表，这里添加一个ProductListVo，相比于product的pojo，省略了一些不必要的展示信息
+- 控制器需要先验证用户是否登录并且具备管理员权限
+- 服务层实现方法先配置**pageHelper**开始页，然后写sql查询产品列表，再遍历列表转化为ProductListVo的列表，最后pageHelper收尾，将pageResult的结果作为data返回
+
+### 产品搜索
+
+- 传入参数为产品名称、产品ID、pageNum(默认=1)、pageSize(默认=10)，搜索返回产品列表
+
+- 与上一个功能类似，区别在于sql查询语句上，如果productName或者productId为空，就不作为查询条件，如果productName不为空，前后要加上sql的通配符“%”，这样可以实现模糊搜索
+
+- 查询的SQL语句使用where标签和if标签，如下：
+
+  ```mysql
+  SELECT
+      <include refid="Base_Column_List"/>
+  from mmall_product
+  <where>
+      <if test="productName != null">
+          and name like #{productName}
+      </if>
+      <if test="productId != null">
+          and id = #{productId}
+       </if>
+  </where>
+  ```
+
+
+
+### 文件上传
+
+- 通过form表单，发起post请求，文件类型为multipart/form-data，匹配spring mvc的格式
+
+  ```jsp
+  <h2>Spring mvc 上传文件</h2>
+  <form name="form1" action="/manage/product/upload" method="post" enctype="multipart/form-data">
+      <input type="file" name="upload_file" />
+      <input type="submit" value="Spring mvc 上传文件" />
+  </form>
+  ```
+
+- 控制器返回的是一个map，包括了上传图片URL和URI。当图片上传到ftp服务器后，将图片的地址返回给前端，这样就可以把图片在网页上呈现出来，图片的命名通过随机的UUID生成，避免重复，返回的json格式为：
+
+  ```json 
+  {
+      "status": 0,
+      "data": {
+          "uri": "e6604558-c0ff-41b9-b6e1-30787a1e3412.jpg",
+          "url": "http://img.happymmall.com/e6604558-c0ff-41b9-b6e1-		   30787a1e3412.jpg"
+      }
+  }
+  ```
+
+  
+
+- 控制器需要先验证用户是否登录并且具备管理员权限，然后从HttpServletRequest获取上传路径path，然后调用服务层的实现方法上传文件，返回目标文件的名称(已经是UUID命名格式)，即uri，再拼接好ftp服务器的http前缀域名和文件名，组成url，然后封装到map中，作为data返回
+
+- 服务层的实现方法是上传文件，参数为原始的MultipartFile file和String path。根据file可以获得原始文件名，再通过分割得到文件扩展名，然后生成一个随机的uuid，拼接上扩展名，得到目标文件名。接下来处理文件路径，根据传入的参数path和目标文件名，生成targetFile对象，然后通过file的transferTo方法，将文件进行转化，再调用FTPUtil的uploadFile方法上传文件
+
+
+
+### 富文本图片上传
+
+- 总体上与文件上传类似，不同的是，富文本对返回值有要求，按照simditor的要求进行返回即可
+
+  ```json
+  {
+      "success": true/false,
+      "msg": "error message", # optional
+      "file_path": "[real file path]"
+  }
+  ```
+
+  
+
+### 前台获取产品详情
+
+- 与后台获取产品详情基本一致，不同之处在于，这里需要多判断一次，如果product的status表示下架或者删除状态，则返回错误消息“产品已下架或者删除”，并且不要判断管理员是否登录
+
+
+
+### 前台产品搜索及排序
+
+- 传入参数为产品关键词、分类ID、排序规则(价格升序、降序)，pageNum(默认=1)和pageSize(默认=10)，通过关键词或者分类来筛选产品，以产品分页列表的形式返回，与上面的**商品列表动态分页**类似
+- 首先是对输入参数进行判断，如果keyword和categoryId都为空，则返回参数错误；如果categoryId不为空，但是查不到该分类的产品，且keyword为空，此时返回空结果集，不算是错误，new一个空的List<ProductListVo>，作为data返回即可；如果keyword不为空，则给它两端加上通配符“%”；如果categoryId不为空且可以查到该分类，则需要递归查询属于它的所有子分类，存储到一个list中categoryIdList
+- 接下来是分页和排序处理，PageHelper.startPage(pageNum, pageSize)开始分页，使用PageHelper.orderBy()方法来设置排序规则，然后将非空的keyword和非空的categoryIdList作为参数，去数据库中查询符合要求的product列表，之后再讲product列表转化为ProductListVo列表，最后pageHelper收尾，将pageInfo的结果作为data返回
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 七、购物车模块
 
