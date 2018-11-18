@@ -33,23 +33,32 @@ public class FileServiceImpl implements IFileService {
         if (!fileDir.exists()) {
             fileDir.setWritable(true);
             fileDir.mkdirs();
+            logger.info("文件路径不存在，创建目录");
         }
         // 创建文件
         File targetFile = new File(path, uploadFileName);
 
         try {
+            // 相当于将原始文件复制并重命名到目标文件夹target-happymmall-upload
             file.transferTo(targetFile);
+            logger.info("文件开始上传");
             // 文件已经上传成功
 
-            FTPUtil.uploadFile(Lists.newArrayList(targetFile));
+            boolean result = FTPUtil.uploadFile(Lists.newArrayList(targetFile));
+            if (!result) {
+                throw new IOException("异常-上传失败");
+            }
+            logger.info("已经上传到ftp服务器上");
             // 已经上传到ftp服务器上
 
             targetFile.delete();
+            logger.info("将目标文件删除");
 
         } catch (IOException e) {
             logger.error("上传文件异常", e);
             return null;
         }
+        logger.info("目标文件名称：{}", targetFile.getName());
         return targetFile.getName();
     }
 }

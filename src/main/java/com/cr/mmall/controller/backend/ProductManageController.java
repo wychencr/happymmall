@@ -11,7 +11,6 @@ import com.cr.mmall.service.IUserService;
 import com.cr.mmall.util.PropertiesUtil;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;

@@ -17,7 +17,27 @@
 
 
 
-- **使用windows自带的IIS添加FTP的方法 [链接](https://www.cnblogs.com/popfisher/p/7992036.html)**，IIS启动后会与nginx冲突
+- 如果上面的ftp服务器不能使用，可以使用Windows自带的IIS，**使用windows自带的IIS添加FTP的方法 [链接](https://www.cnblogs.com/popfisher/p/7992036.html)**，IIS默认启动后会与nginx冲突，所以要修改默认页的端口，nginx设定的监听端口是80，所以可以将IIS默认页的端口设定为如8086，tomcat的默认端口是8080，这样就不冲突了
+
+  ![](https://ws1.sinaimg.cn/large/e4eff812ly1fxc6mu28gdj20nz0d474l.jpg)
+
+
+
+- 后面在使用org.apache.commons.net.ftp.FTPClient登录ftp服务器时，发现**匿名身份**不能连接成功，所以需要设置ftp登录的账户和密码。在IIS管理器的FTP身份验证设置中，禁用匿名身份验证，启用基本身份验证，然后在计算管理中，新建一个测试账户，比如用户名和密码都为ftpuser，如下图
+
+  ![](https://ws1.sinaimg.cn/large/e4eff812gy1fxcbtko7twj20hx06pt8l.jpg)
+
+  ![](https://ws1.sinaimg.cn/large/e4eff812gy1fxcbtpxhb1j20gv059dfo.jpg)
+
+
+
+
+
+
+
+
+
+
 
 ### Nginx安装
 
@@ -51,7 +71,7 @@ Nginx是一款轻量级Web服务器，也是一款反向代理服务器。
 
 - 然后修改`image.imooc.com.conf`：
 
-  ```
+  ```json
   server {
       listen 80;
       autoindex off;
@@ -80,7 +100,7 @@ Nginx是一款轻量级Web服务器，也是一款反向代理服务器。
 
 - 修改`tomcat.imooc.com.conf`
 
-  ```
+  ```json
   server {
       listen 80;
       autoindex on;
@@ -564,7 +584,7 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
 
 
-### 文件上传
+### 文件上传(重要)
 
 - 通过form表单，发起post请求，文件类型为multipart/form-data，匹配spring mvc的格式
 
@@ -590,11 +610,67 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
   
 
-- 控制器需要先验证用户是否登录并且具备管理员权限，然后从HttpServletRequest获取上传路径path，然后调用服务层的实现方法上传文件，返回目标文件的名称(已经是UUID命名格式)，即uri，再拼接好ftp服务器的http前缀域名和文件名，组成url，然后封装到map中，作为data返回
+- 控制器的传入参数为
 
-- 服务层的实现方法是上传文件，参数为原始的MultipartFile file和String path。根据file可以获得原始文件名，再通过分割得到文件扩展名，然后生成一个随机的uuid，拼接上扩展名，得到目标文件名。接下来处理文件路径，根据传入的参数path和目标文件名，生成targetFile对象，然后通过file的transferTo方法，将文件进行转化，再调用FTPUtil的uploadFile方法上传文件
+  ```
+  public ServerResponse upload(HttpSession session, @RequestParam(value = "upload_file", required = false) MultipartFile file, HttpServletRequest request)
+  ```
 
+  首先需要根据session验证用户是否登录并且具备管理员权限，然后从request获取上传文件夹的路径path(`/target/happymmall/upload`)，然后调用服务层的实现方法上传文件，返回目标文件的名称(已经是UUID命名格式)，即uri，再拼接好ftp服务器的http前缀域名和文件名，组成url，然后封装到map中，作为data返回
 
+- 服务层的实现方法是上传文件，参数为原始文件MultipartFile file和String path。根据file可以获得原始文件名，再通过分割得到文件扩展名，然后生成一个**随机的uuid(避免重复)**，拼接上扩展名，得到目标文件名。
+
+- 接下来处理文件路径，根据传入的参数path和目标文件名，生成targetFile对象，然后通过file的**transferTo**方法(相当于将原始文件复制并重命名到上传文件夹，再调用FTPUtil的**uploadFile**方法上传文件，上传结束后将targetFile文件删除，否则上传文件夹会越变越大
+
+- 接下来是FTPUtil的uploadFile方法，传入参数为targetFile(列表)。首先尝试连接和登录ftp服务器，需要host，port(默认21)，用户名和密码，ftp属性文件`mmall.properties`的配置内容为：
+
+  ```properties
+  ftp.server.ip=127.0.0.1
+  ftp.user=ftpuser
+  ftp.pass=ftpuser
+  ftp.server.http.prefix=http://image.imooc.com/
+  ```
+
+- 然后配置ftp连接的相关属性，最重要的就是配置被动模式，否则会报**SocketException: Connection reset**或者**FTPConnectionClosedException: Connection closed without indication**异常，在这里困扰了很长时间，[FTPClient类的说明文档](http://commons.apache.org/proper/commons-net/apidocs/org/apache/commons/net/ftp/FTPClient.html#storeFileStream(java.lang.String))，最后参考自[stackoverflow](https://stackoverflow.com/questions/8333797/ftpclient-uploading-file-socketexception-connection-reset)解决，FTP的几种连接模式简介[PORT/PASV/EPRT/EPSV](https://www.cnblogs.com/wuyuxuan/p/5544725.html)
+
+  ```java
+   ftpClient.changeWorkingDirectory(remotePath);
+   ftpClient.setBufferSize(1024);
+   ftpClient.setControlEncoding("UTF-8");
+   ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
+  
+   /************************** 很重要 ***********************/
+   ftpClient.enterLocalPassiveMode();
+   ftpClient.setUseEPSVwithIPv4(true);
+   /********************************************************/
+  ```
+
+- **上传功能测试**：
+
+  1、启动项目(运行tomcat)
+
+  2、启动IIS，并开启ftp站点，以便于java程序可以向ftp的/img路径下上传图片文件
+
+  3、启动Nginx，上传后的文件拼接了域名前缀，这样就可以通过返回的URL：http://image.imooc.com/xxx.png来直接访问到图片
+
+  4、先登录管理员账户，然后在首页选择一个图片上传，之后返回Map数据，包含了上传后图片的URL，点击可以打开，再访问ftp服务器，发现新增了一张图片，日志如下：
+
+  ```
+  [com.cr.mmall.service.impl.FileServiceImpl] - 开始上传文件，上传文件的文件名:2d3fa4e3-87d0-41d7-bd5b-8135b13acbcf.png，上传的路径:E:\Java Projects\HappyMMall\happymmall\target\happymmall\upload，新文件名:0ee91666-8a46-4d4b-9e52-557a37f24b96.png
+  [com.cr.mmall.service.impl.FileServiceImpl] - 文件开始上传
+  [com.cr.mmall.util.FTPUtil] - 开始连接ftp服务器
+  [com.cr.mmall.util.FTPUtil] - 尝试连接FTP服务器
+  [com.cr.mmall.util.FTPUtil] - 连接FTP服务器状态：true
+  [com.cr.mmall.util.FTPUtil] - 连接ftp服务器成功
+  [com.cr.mmall.util.FTPUtil] - 结束上传，上传结果:true
+  [com.cr.mmall.service.impl.FileServiceImpl] - 已经上传到ftp服务器上
+  [com.cr.mmall.service.impl.FileServiceImpl] - 将目标文件删除
+  [com.cr.mmall.service.impl.FileServiceImpl] - 目标文件名称：0ee91666-8a46-4d4b-9e52-557a37f24b96.png
+  ```
+
+  
+
+  
 
 ### 富文本图片上传
 
