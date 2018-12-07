@@ -612,7 +612,7 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
 - 控制器的传入参数为
 
-  ```
+  ```java
   public ServerResponse upload(HttpSession session, @RequestParam(value = "upload_file", required = false) MultipartFile file, HttpServletRequest request)
   ```
 
