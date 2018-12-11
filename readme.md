@@ -31,14 +31,6 @@
 
 
 
-
-
-
-
-
-
-
-
 ### Nginx安装
 
 ```
@@ -71,7 +63,7 @@ Nginx是一款轻量级Web服务器，也是一款反向代理服务器。
 
 - 然后修改`image.imooc.com.conf`：
 
-  ```json
+  ```
   server {
       listen 80;
       autoindex off;
@@ -100,7 +92,7 @@ Nginx是一款轻量级Web服务器，也是一款反向代理服务器。
 
 - 修改`tomcat.imooc.com.conf`
 
-  ```json
+  ```
   server {
       listen 80;
       autoindex on;
@@ -700,19 +692,149 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 ## 七、购物车模块
+
+### 购物车接口设计
+
+- 门户购物车接口
+
+  [链接](https://gitee.com/imooccode/happymmallwiki/wikis/%E9%97%A8%E6%88%B7_%E8%B4%AD%E7%89%A9%E8%BD%A6%E6%8E%A5%E5%8F%A3?sort_id=9919)
+
+### 查询购物车列表
+
+- 控制层只需要HttpSession参数，获取登录信息，并得到userId供服务层处理
+
+- 将查询的购物车列表封装成一个**CartVo**对象，包含了一个CartProductVo列表、购物车总价、是否全选、imageHost，其结构为：
+
+  ```java
+  public class CartVo {
+      private List<CartProductVo> cartProductVoList;
+      private BigDecimal cartTotalPrice;
+      private Boolean allChecked;
+      private String imageHost;
+  }
+  ```
+
+  其中**CartProductVo**也是一个Vo对象，表示购物车中某一种产品的详细信息，其结构为：
+
+  ```java
+  public class CartProductVo {
+      private Integer id;
+      private Integer userId;
+      private Integer productId;
+      private Integer quantity;
+      private String productName;
+      private String productSubtitle;
+      private String productMainImage;
+      private BigDecimal productPrice;
+      private Integer productStatus;
+      private BigDecimal productTotalPrice;
+      private Integer productStock;  // 产品库存
+      private Integer productChecked;  // 产品是否被勾选
+  
+      private String limitQuantity;  // 限制数量的返回结果
+  }
+  ```
+
+- 在服务层定义一个getCartVoLimit方法，参数为userId，返回值为**CartVo**对象。实现过程为：首先通过userId从数据库中查找属于该用户的cart列表，然后遍历列表，根据单个的cart中的产品Id查询对应的product，再结合cart和product中的信息，封装成**CartProductVo**，再将CartProductVo添加到cartProductVoList中；
+
+- cartTotalPrice购物车总价的计算方式是**已勾选**产品的产品总价（单价*数量）之和，其中计**算价格时使用BigDecimal避免精度丢失**；
+
+- 在计算产品总价时，需要先判断购物车中的数量是否大于产品库存数量，如果大于则更新数据库，将购物车中的数量设定为等于产品库存数量，如果小于则直接计算总价；
+
+- allChecked是根据从数据库中查未checked的数量是不是0得到的；imageHost从属性文件中获得
+
+- 经过以上步骤，可以通过一个userId得到一个CartVo，直接将CartVo作为ServerResponse的data返回即可
+
+- 在测试发现，使用查询购物车列表时出现**500错误**，经过调试，发现是数据库中cart表的productId在product表中查不到，导致了后续的程序错误。解决方法是，在getCartVoLimit方法中，当查询productId时，如果查不到就将cartVo作为null返回；服务层处理函数中，再对cartVo进行判断，如果是null就返回参数错误
+
+### 添加到购物车
+
+- 控制器传入参数为产品Id和数量，首先判断登录情况，如果未登录强制登录，否则将参数交给服务层处理；
+- 服务层首先校验参数的有效性，然后通过userId和productId从数据库中查询cart；如果cart未查到，则新建一个cart，设置userId、productId、count，设置勾选状态，然后插入到数据库中；否则在查到的cart的基础上更改count，再更新到数据库；
+- 对数据库更新完成后，查询购物车列表，即根据userId获取cartVo，作为ServerResponse的data返回
+
+### 更新购物车
+
+- 控制器传入参数为产品Id和数量，首先判断登录情况，如果未登录强制登录，否则将参数交给服务层处理；
+- 服务层首先校验参数的有效性，然后通过userId和productId从数据库中查询cart，在查到的cart的基础上更改count，再更新到数据库；
+- 对数据库更新完成后，查询购物车列表，即根据userId获取cartVo，作为ServerResponse的data返回
+
+### 删除购车产品
+
+- 控制器传入参数为productId(**productId是多个产品ID的字符串，由逗号隔开**)，首先判断登录情况，如果未登录强制登录，否则将参数交给服务层处理；
+
+- 服务层将productIds处理成productList，然后再结合userId，从数据库中删除对应的产品项，sql语句为：
+
+  ```xml
+  <delete id="deleteByUserIdProductIds" parameterType="map">
+    delete from mmall_cart
+    where user_id = #{userId}
+    <if test="productIdList != null">
+      and product_id in
+      <foreach collection="productIdList" item="item" index="index" open="(" separator="," close=")">
+        #{item}
+      </foreach>
+    </if>
+  </delete>
+  ```
+
+- 对数据库更新完成后，查询购物车列表，即根据userId获取cartVo，作为ServerResponse的data返回
+
+
+
+### 单选/取消单选
+
+- 控制器传入参数为HttpSession和productId，首先判断登录情况，如果未登录强制登录，否则将参数交给服务层处理；
+
+- 服务层处理函数的参数为userId、productId和勾选状态（单选checked=1，取消单选checked=0），根据这三个参数对数据库中属于该用户的某个产品项的勾选状态进行更改，其中sql语句为：
+
+  ```xml
+  <update id="checkedOrUncheckedProduct" parameterType="map">
+      UPDATE  mmall_cart
+      set checked = #{checked},
+      update_time = now()
+      where user_id = #{userId}
+      <if test="productId != null">
+        and product_id = #{productId}
+      </if>
+  </update>
+  ```
+
+- 最后查询购物车列表，将cartVo作为ServerResponse的data返回即可
+
+### 全选/取消全选
+
+- 控制器传入参数为HttpSession，首先判断登录情况，如果未登录强制登录，否则将参数交给服务层处理；
+- 服务层处理函数的参数同上，因此**对于productId参数，在控制器传入时设置为null**，在mysql语句中已经对null情况作了判断
+
+### 查询购物车产品总数
+
+- 控制器传入参数为HttpSession，首先判断登录情况，如果**未登录则返回0**，否则将参数交给服务层处理；
+
+- 服务层处理函数根据userId查询购物车中产品总数量，查询语句为：
+
+  ```xml
+  <select id="selectCartProductCount" parameterType="int" resultType="int">
+    select IFNULL(sum(quantity),0) as count from mmall_cart where user_id = #{userId}
+  </select>
+  ```
+
+  值得注意的是，有可能根据userId查不到结果，为了避免出现null的情况，使用IFNULL()语句，设置默认返回值为0；
+
+- 最后将查到的整形返回值作为ServerResponse的data返回
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 八、收货地址管理模块
 
