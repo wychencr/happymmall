@@ -688,7 +688,7 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
 - 传入参数为产品关键词、分类ID、排序规则(价格升序、降序)，pageNum(默认=1)和pageSize(默认=10)，通过关键词或者分类来筛选产品，以产品分页列表的形式返回，与上面的**商品列表动态分页**类似
 - 首先是对输入参数进行判断，如果keyword和categoryId都为空，则返回参数错误；如果categoryId不为空，但是查不到该分类的产品，且keyword为空，此时返回空结果集，不算是错误，new一个空的List<ProductListVo>，作为data返回即可；如果keyword不为空，则给它两端加上通配符“%”；如果categoryId不为空且可以查到该分类，则需要递归查询属于它的所有子分类，存储到一个list中categoryIdList
-- 接下来是分页和排序处理，PageHelper.startPage(pageNum, pageSize)开始分页，使用PageHelper.orderBy()方法来设置排序规则，然后将非空的keyword和非空的categoryIdList作为参数，去数据库中查询符合要求的product列表，之后再讲product列表转化为ProductListVo列表，最后pageHelper收尾，将pageInfo的结果作为data返回
+- 接下来是**分页和排序处理**，PageHelper.startPage(pageNum, pageSize)开始分页，使用PageHelper.orderBy()方法来设置排序规则，然后将非空的keyword和非空的categoryIdList作为参数，去数据库中查询符合要求的product列表，之后再将product列表转化为ProductListVo列表，最后pageHelper收尾，将pageInfo的结果作为data返回
 
 
 
@@ -826,17 +826,23 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
 
 
-
-
-
-
-
-
-
-
-
-
 ## 八、收货地址管理模块
+
+### 收货地址接口设计
+
+- 门户收货地址接口
+
+  [链接](https://gitee.com/imooccode/happymmallwiki/wikis/%E9%97%A8%E6%88%B7_%E6%94%B6%E8%B4%A7%E5%9C%B0%E5%9D%80%E6%8E%A5%E5%8F%A3?sort_id=9916)
+
+
+
+
+
+
+
+
+
+
 
 ## 九、支付模块
 
