@@ -134,6 +134,43 @@
 
 
 
+### 集成到项目
+
+- 将原demo中的前缀为alipay的jar包复制到项目工程/`webapp/WEB-INF/lib`下，并将其他几个公共的jar包添加到maven配置文件中（版本保持一致，避免冲突），在`项目结构-模块-依赖`设置中，添加lib文件下的jar包；
+
+- 在maven的pom文件中添加编译插件，可以将lib下的jar包打包发布：
+
+  ```xml
+  <!-- maven的核心插件之-complier插件默认只支持编译Java 1.4，因此需要加上支持高版本jre的配置，在pom.xml里面加上 增加编译插件 -->
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+      <source>1.8</source>
+      <target>1.8</target>
+      <encoding>UTF-8</encoding>
+      <!--将支付宝的sdk放到lib中-->
+      <compilerArguments>
+        <extdirs>${project.basedir}/src/main/webapp/WEB-INF/lib</extdirs>
+      </compilerArguments>
+    </configuration>
+  </plugin>
+  ```
+
+- 在项目工程中建立`com.alipay.demo.trade`包，并将demo中的两个java源文件复制过来
+
+- 运行项目工程中的Main.java，可以看到下单成功；
+
+
+
+
+
+
+
+
+
+
+
 
 
 ## 十、订单管理模块
