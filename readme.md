@@ -834,16 +834,137 @@ decimal(20， 2)表示18个整数位，两个小数位。
 
   [链接](https://gitee.com/imooccode/happymmallwiki/wikis/%E9%97%A8%E6%88%B7_%E6%94%B6%E8%B4%A7%E5%9C%B0%E5%9D%80%E6%8E%A5%E5%8F%A3?sort_id=9916)
 
+### 添加地址
+
+- 控制器传入参数为HttpSession和Shipping对象，首先判断登录情况，如果未登录强制登录，否则将shipping参数和userId交给服务层处理；
+- 传过来的shipping对象中userId正常情况下是空的，所以在服务层处理函数中，首先对shipping的userId项赋值，然后再将shipping插入到数据库中；
+- 如果插入成功，则返回“新建地址成功”，并将插入后这条记录的shippingId返回
 
 
 
+### 删除地址
+
+- 控制器传入参数为HttpSession和shippingId，首先判断登录情况，如果未登录强制登录，否则将shippingId和userId交给服务层处理；
+
+- 在服务层处理函数中，根据shippingId和userId把数据库中的对应项删除，然后返回“删除地址成功”或者“删除地址失败”；
+
+  ```
+  这里要注意横向越权，对于一个已登录用户，删除地址时不能仅通过shippingId，还同时要校验userId，否则会删除掉别人的地址记录
+  ```
 
 
 
+### 更新地址
 
+- 控制器传入参数为HttpSession和Shipping对象（需要包含id项），首先判断登录情况，如果未登录强制登录，否则将shipping参数和userId交给服务层处理；
+
+- 在服务层处理函数中，首先对shipping的userId项赋值，然后根据userId和shippingId在数据库中更新，最后返回“更新地址成功”或者“更新地址失败”
+
+  ```
+  传过来的userId可能会被模拟，造成横向越权，所以这里要重新赋值一下
+  ```
+
+- mysql更新语句为：
+
+  ```xml
+  <update id="updateByShipping" parameterType="com.cr.mmall.pojo.Shipping">
+    update mmall_shipping
+    set
+      receiver_name = #{receiverName,jdbcType=VARCHAR},
+      receiver_phone = #{receiverPhone,jdbcType=VARCHAR},
+      receiver_mobile = #{receiverMobile,jdbcType=VARCHAR},
+      receiver_province = #{receiverProvince,jdbcType=VARCHAR},
+      receiver_city = #{receiverCity,jdbcType=VARCHAR},
+      receiver_district = #{receiverDistrict,jdbcType=VARCHAR},
+      receiver_address = #{receiverAddress,jdbcType=VARCHAR},
+      receiver_zip = #{receiverZip,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = now()
+    where id = #{id,jdbcType=INTEGER}
+    and user_id = #{userId,jdbcType=INTEGER}
+  </update>
+  ```
+
+### 查询地址
+
+- 控制器传入参数为HttpSession和shippingId，首先判断登录情况，如果未登录强制登录，否则将shippingId和userId交给服务层处理；
+- 在服务层处理函数中，根据shippingId和userId查询数据库，如果查询成功则显示“查询地址成功”并将查到的shipping对象返回，否则返回“查询地址失败”
+
+### 查询用户地址列表
+
+- 控制器传入参数为HttpSession和分页参数（pageNum、pageSize，使用RequestParam设置默认值为1和10），首先判断登录情况，如果未登录强制登录，否则将分页参数和userId交给服务层处理；
+
+- 在服务层处理函数中，根据userId查询数据库，得到地址列表，然后通过pageHelper的分页，将分页信息pageInfo返回即可，相关代码如下：
+
+  ```java
+  @Override
+  public ServerResponse<PageInfo> list(Integer userId, int pageNum, int pageSize) {
+      PageHelper.startPage(pageNum, pageSize);
+      List<Shipping> shippingList = shippingMapper.selectByUserId(userId);
+      PageInfo pageInfo = new PageInfo(shippingList);
+      return ServerResponse.createBySuccess(pageInfo);
+  }
+  ```
 
 
 
 ## 九、支付模块
+
+#### 关键入参
+
+| 参数名称    | 参数说明 |
+| ----------- | -------- |
+| notify_time | 通知时间 |
+
+
+
+
+
+
+
+#### 交易状态说明
+
+| 枚举名称       | 枚举说明                                 |
+| -------------- | ---------------------------------------- |
+| WAIT_BUYER_PAY | 交易创建，等待买家付款                   |
+| TRADE_CLOSED   | 未付款交易超时关闭，或支付完成后全额退款 |
+| TRADE_SUCCESS  | 交易支付成功                             |
+| TRADE_FINISHED | 交易结束，不可退款                       |
+
+#### 通知触发条件
+
+| 触发条件名     | 触发条件描述 | 触发条件默认值      |
+| -------------- | ------------ | ------------------- |
+| TRADE_FINISHED | 交易完成     | false（不触发通知） |
+| TRADE_SUCCESS  | 支付成功     | true（触发通知）    |
+| WAIT_BUYER_PAY | 交易创建     | false（不触发通知） |
+| TRADE_CLOSED   | 交易关闭     | false（不触发通知） |
+
+
+
+#### 支付渠道说明
+
+| 支付渠道代码   | 支付渠道   |
+| -------------- | ---------- |
+| COUPON         | 支付宝红包 |
+| ALIPAYACCOUNT  | 支付宝余额 |
+| POINT          | 集分宝     |
+| DISCOUNT       | 折扣券     |
+| PCARD          | 预付卡     |
+| FINANCEACCOUNT | 余额宝     |
+| MCARD          | 商家储值卡 |
+| MDISCOUNT      | 商户优惠券 |
+| MCOUPON        | 商户红包   |
+| PCREDIT        | 蚂蚁花呗   |
+
+
+
+
+
+
+
+
+
+
 
 ## 十、订单管理模块
