@@ -114,7 +114,7 @@
 
 
 
-- 之后再运行主函数Main.java，从日志中可以看到demo运行成功，生成了一笔订单
+- 之后再运行主函数Main.java（测试**当面付2.0生成支付二维码**），从日志中可以看到demo运行成功，生成了一笔订单
 
   ![](https://ws1.sinaimg.cn/large/e4eff812gy1fy33dn6d2xj20s104adfp.jpg)
 
@@ -134,7 +134,7 @@
 
 
 
-### 集成到项目
+### 移植到项目中调试
 
 - 将原demo中的前缀为alipay的jar包复制到项目工程/`webapp/WEB-INF/lib`下，并将其他几个公共的jar包添加到maven配置文件中（版本保持一致，避免冲突），在`项目结构-模块-依赖`设置中，添加lib文件下的jar包；
 
@@ -163,13 +163,120 @@
 
 
 
+### 生成订单和付款码
+
+- 控制器中传入参数为HttpSession session, 订单号Long orderNo和HttpServletRequest request，session用于校验用户是否登录，request可以获取上传路径，将参数userId、path、orderNo交由服务层处理；
+- 服务层处理函数首先根据订单号和用户ID查询数据库，校验前端传过来的订单是否存在，如果存在则将订单号放到Map中；
+- 接下来将SDK中的**当面付2.0生成支付二维码**函数**main.test_trade_precreate()**里面的代码移植到服务层处理函数中，修改相关的订单生成参数，其中商品明细列表通过在for循环中，根据userId和orderNo查表order_item得到
+- 之后创建扫码支付请求builder，然后得到订单创建结果，如果成功则生成图片二维码，并上传到FTP服务器中，将二维码的url放到Map中，将Map作为ServerResponse的data返回；失败则返回对应的错误消息
 
 
 
+### 支付宝回调验签
+
+- 当收银台调用预下单请求API生成二维码展示给用户后，用户通过手机扫描二维码进行支付，支付宝会将该笔订单的变更信息，沿着商户调用预下单请求时所传入的通知地址主动推送给商户，其中包含了多项参数，程序需要做的就是：
+  - 验证异步通知是不是支付宝发过来的，通过SDK中的**AlipaySignature.rsaCheckV2()**方法，需要在通知返回参数列表中，先除去sign(sdk中已经移除)、**sign_type**两个参数 
+
+  - 对通知中的信息进行校验，同时要避免重复通知，官方文档的提示：
+
+    > 商户需要验证该通知数据中的out_trade_no是否为商户系统中创建的订单号，并判断total_amount是否确实为该订单的实际金额（即商户订单创建时的金额），同时需要校验通知中的seller_id（或者seller_email) 是否为out_trade_no这笔单据的对应的操作方（有的时候，一个商户可能有多个seller_id/seller_email），上述有任何一个验证不通过，则表明本次通知是异常通知，务必忽略。在上述验证通过后商户必须根据支付宝不同类型的业务通知，正确的进行不同的业务处理，并且过滤重复的通知结果数据。在支付宝的业务通知中，只有交易通知状态为TRADE_SUCCESS或TRADE_FINISHED时，支付宝才会认定为买家付款成功
+
+  - 给支付宝服务器返回处理信息，否则支付宝服务器会不断重复发送通知
+
+    > 程序执行完后必须打印输出“success”（不包含引号）。如果商户反馈给支付宝的字符不是success这7个字符，支付宝服务器会不断重发通知，直到超过24小时22分钟 
+
+  
+
+- 控制器中传入参数为HttpServletRequest request，从request中获取Map参数，需要将`Map<String, String[]>` --> `Map<String, String>` 以便于作为后面的验签参数；
+
+- 接下来验证回调的正确性，是否来自于支付宝，要先移除**sign_type**参数：
+
+  ```java
+  // 除去sign(sdk中已经移除)、sign_type两个参数，对其他参数进行验签
+  params.remove("sign_type");
+  try {
+      boolean alipayRSACheckedV2 = AlipaySignature.rsaCheckV2(params, Configs.getAlipayPublicKey(), "utf-8", Configs.getSignType());
+      if (!alipayRSACheckedV2) {
+          return ServerResponse.createByErrorMessage("非法请求，验证不通过!!!");
+      }
+  } catch (AlipayApiException e) {
+      logger.info("支付宝回调异常", e);
+  }
+  ```
+
+- 接下来将`Map<String, String>`作为参数交给服务层处理，对其中的参数进行校验；
+
+- 首先从参数中获取**商户订单号**orderNo、**支付宝流水号**tradeNo、**交易状态**tradeStatus；
+
+- 查询数据库校验是否是商户订单号，如果不是返回“非法”，如果是则校验订单状态，再检验交易状态(**如果交易成功则更新数据库中订单状态和付款时间**)，然后存储支付信息PayInfo到数据库中；
+
+- 最后在控制器中给支付宝服务器返回处理信息：
+
+  ```java
+  // 验证各种数据并返回给支付宝服务器通知
+  ServerResponse serverResponse = iOrderService.aliCallback(params);
+  if(serverResponse.isSuccess()) {
+      return Const.AlipayCallback.RESPONSE_SUCCESS;
+  }
+  return Const.AlipayCallback.RESPONSE_FAILED;
+  ```
 
 
 
+### 查询订单支付状态
 
+- 控制器中传入参数为session和订单号，首先校验用户是否登录，如果是则将用户id和订单号交给服务层控制函数处理；
+- 服务层控制函数根据用户id和订单号查询数据库，如果查不到则返回“用户没有订单”，否则继续校验订单状态，如果是已支付（在支付宝回调验证中，如果付款成功会更新数据库订单的状态）则返回成功，否则返回错误
+
+
+
+### Ngrok 内网穿透
+
+一般情况下，本机IP是内网IP，无法从外网访问本机，当把tomcat web工程部署到8080端口后，也只能从本机局域网访问，这样就无法接收到支付宝的回调通知，内网穿透可以使外网访问到局域网内的本机。
+
+常用的内网穿透软件有花生壳、NatApp、**Ngrok**等，这里使用免费的Ngrok。
+
+> 详细的Ngrok编译方法参见[链接](https://blog.csdn.net/zhangguo5/article/details/77848658?utm_source=5ibc.net&utm_medium=referral)
+>
+> 免费的Ngrok客户端**[下载地址](http://ngrok.ciqiuwl.cn/)**
+
+- 下载客户端，解压，运行启动脚本
+
+- 输入自定义的三级域名前缀，如“cr”
+
+- 输入绑定的本机端口，如“8080”
+
+- 启动成功后，部署好本地web工程，从外网访问“http://cr.ngrok.xiaomiqiu.cn/  ”即可
+
+- 如果要自定义域名，需要先将自己的域名解析到120.78.180.104，然后执行
+
+  ```
+  ngrok -config=ngrok.cfg -hostname xxx.xxx.xxx 8080
+  ```
+
+  
+
+### 功能测试
+
+- 启动Tomcat  http://localhost:8080/
+
+- 启动FTP  [ftp://127.0.0.1/]( ftp://127.0.0.1/)  （绑定21端口）
+
+- 启动Nginx  http://localhost/  （默认80端口）   http://image.imooc.com/1.png
+
+- 启动Ngrok  http://cr.ngrok.xiaomiqiu.cn/    （绑定本机8080端口）
+
+- 修改属性文件中的**alipay.callback.url**，以便于本机能接收到支付宝回调通知：
+
+  ```
+  alipay.callback.url=http://cr.ngrok.xiaomiqiu.cn/order/alipay_callback
+  ```
+
+- 测试pay接口（传入的订单号和userId要在数据库中存在，并且支付状态为未支付）能否生成订单并上传二维码，返回二维码的url
+
+- 然后使用沙箱支付宝扫码支付，查看买卖双方的账单
+
+- 使用query_order_pay_status接口查看支付前后的订单状态
 
 
 

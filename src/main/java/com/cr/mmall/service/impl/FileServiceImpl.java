@@ -42,7 +42,7 @@ public class FileServiceImpl implements IFileService {
             // 相当于将原始文件复制并重命名到目标文件夹target-happymmall-upload
             file.transferTo(targetFile);
             logger.info("文件开始上传");
-            // 文件已经上传成功
+            // 文件开始上传
 
             boolean result = FTPUtil.uploadFile(Lists.newArrayList(targetFile));
             if (!result) {
