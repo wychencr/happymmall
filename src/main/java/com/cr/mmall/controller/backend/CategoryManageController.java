@@ -16,7 +16,7 @@ import javax.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping(value = "/manage/category")
-public class CategoryManagerController {
+public class CategoryManageController {
 
     @Resource
     private IUserService iUserService;

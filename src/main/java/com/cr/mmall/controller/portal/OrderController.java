@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
@@ -29,9 +30,70 @@ public class OrderController {
     @Resource
     private IOrderService iOrderService;
 
+
+    // 创建订单
+    @RequestMapping("/create")
+    @ResponseBody
+    public ServerResponse create(HttpSession session, Integer shippingId) {
+        User user = (User) session.getAttribute(Const.CURRENT_USER);
+        if (user == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDesc());
+        }
+        return iOrderService.create(user.getId(), shippingId);
+    }
+
+    // 取消订单
+    @RequestMapping("/cancel")
+    @ResponseBody
+    public ServerResponse cancel(HttpSession session, Long orderNo) {
+        User user = (User) session.getAttribute(Const.CURRENT_USER);
+        if (user == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDesc());
+        }
+        return iOrderService.cancel(user.getId(), orderNo);
+    }
+
+    // 获取订单的商品信息
+    @RequestMapping("/get_order_cart_product")
+    @ResponseBody
+    public ServerResponse getOrderCartProduct(HttpSession session) {
+        User user = (User) session.getAttribute(Const.CURRENT_USER);
+        if (user == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDesc());
+        }
+        return iOrderService.getOrderCartProduct(user.getId());
+    }
+
+    // 获取订单详情
+    @RequestMapping("/detail")
+    @ResponseBody
+    public ServerResponse detail(HttpSession session, Long orderNo) {
+        User user = (User) session.getAttribute(Const.CURRENT_USER);
+        if (user == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDesc());
+        }
+        return iOrderService.detail(user.getId(), orderNo);
+    }
+
+    // 获取用户订单分页列表
+    @RequestMapping("/list")
+    @ResponseBody
+    public ServerResponse list(@RequestParam(value = "pageNum", defaultValue = "1") int pageNum,
+                               @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
+                               HttpSession session) {
+        User user = (User) session.getAttribute(Const.CURRENT_USER);
+        if (user == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDesc());
+        }
+        return iOrderService.getOrderList(user.getId(), pageNum, pageSize);
+    }
+
+
+    /** 支付模块*/
+
+    // 订单支付(根据订单号下单，并生成支付宝的二维码url返回)
     @RequestMapping("/pay")
     @ResponseBody
-    // 订单支付(根据订单号下单，并生成支付宝的二维码url返回)
     public ServerResponse pay(HttpSession session, Long orderNo, HttpServletRequest request) {
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {
@@ -42,9 +104,9 @@ public class OrderController {
         return iOrderService.pay(user.getId(), path, orderNo);
     }
 
+    // 支付宝回调
     @RequestMapping("/alipay_callback")
     @ResponseBody
-    // 支付宝回调
     public Object alipayCallback(HttpServletRequest request) {
         // Map<String, String[]> --> Map<String, String> 作为后面的验签参数
         Map<String, String> params = Maps.newHashMap();
@@ -80,9 +142,9 @@ public class OrderController {
         return Const.AlipayCallback.RESPONSE_FAILED;
     }
 
+    // 查询订单支付状态
     @RequestMapping("/query_order_pay_status")
     @ResponseBody
-    // 查询订单支付状态
     public ServerResponse<Boolean> queryOrderPayStatus(HttpSession session, Long orderNo) {
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {
