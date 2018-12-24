@@ -10,7 +10,7 @@
     <!-- scan the package and the sub package -->
     <context:component-scan base-package="com.cr.mmall.controller"/>
     <!-- don't handle the static resource -->
-    <mvc:default-servlet-handler />
+    <mvc:default-servlet-handler/>
 
     <!-- if you use annotation you must configure following setting -->
     <mvc:annotation-driven>
@@ -36,8 +36,8 @@
     <!-- 文件上传 -->
     <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
         <property name="maxUploadSize" value="10485760"/> <!-- 10m -->
-        <property name="maxInMemorySize" value="4096" />
-        <property name="defaultEncoding" value="UTF-8" />
+        <property name="maxInMemorySize" value="4096"/>
+        <property name="defaultEncoding" value="UTF-8"/>
     </bean>
 
     <!-- configure the InternalResourceViewResolver -->
@@ -45,8 +45,8 @@
           id="internalResourceViewResolver">
         <!--相当于寻找/jsp/xxx.jsp文件-->
         <!-- 前缀 -->
-        <property name="prefix" value="/jsp/" />
+        <property name="prefix" value="/jsp/"/>
         <!-- 后缀 -->
-        <property name="suffix" value=".jsp" />
+        <property name="suffix" value=".jsp"/>
     </bean>
 </beans>

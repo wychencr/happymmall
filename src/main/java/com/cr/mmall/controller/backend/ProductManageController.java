@@ -168,7 +168,7 @@ public class ProductManageController {
             resultMap.put("file_path", url);
 
             // 修改response的Header
-            response.addHeader("Access-Control-Allow-Headers","X-File-Name");
+            response.addHeader("Access-Control-Allow-Headers", "X-File-Name");
 
             return resultMap;
 

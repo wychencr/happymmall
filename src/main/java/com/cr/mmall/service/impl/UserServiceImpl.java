@@ -1,5 +1,6 @@
 package com.cr.mmall.service.impl;
 // implement
+
 import com.cr.mmall.common.Const;
 import com.cr.mmall.common.ServerResponse;
 import com.cr.mmall.common.TokenCache;
@@ -36,7 +37,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public ServerResponse <String> register(User user) {
+    public ServerResponse<String> register(User user) {
         ServerResponse validResponse = this.checkValid(user.getUsername(), Const.USERNAME);
         if (!validResponse.isSuccess()) {
             return validResponse;
@@ -61,7 +62,7 @@ public class UserServiceImpl implements IUserService {
 
     /* 检验用户名和邮件的有效性 */
     @Override
-    public ServerResponse <String> checkValid(String str, String type) {
+    public ServerResponse<String> checkValid(String str, String type) {
         if (org.apache.commons.lang3.StringUtils.isNotBlank(type)) {
             // 开始校验
             if (Const.USERNAME.equals(type)) {
@@ -85,7 +86,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public ServerResponse <String> selectQuestion(String username) {
+    public ServerResponse<String> selectQuestion(String username) {
         ServerResponse validResponse = this.checkValid(username, Const.USERNAME);
         // 对于注册阶段，是希望没有重复的用户，显示校验成功，而这里则表明没有这个用户，所以要重新定义错误信息
         if (validResponse.isSuccess()) {
@@ -100,7 +101,7 @@ public class UserServiceImpl implements IUserService {
 
     /* 校验密保问题的答案是否正确 */
     @Override
-    public ServerResponse <String> checkAnswer(String username, String question, String answer) {
+    public ServerResponse<String> checkAnswer(String username, String question, String answer) {
         int resultCount = userMapper.checkAnswer(username, question, answer);
         if (resultCount > 0) {
             String forgetToken = UUID.randomUUID().toString();
@@ -111,7 +112,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public ServerResponse <String> resetPassword(String username, String passwordNew, String forgetToken) {
+    public ServerResponse<String> resetPassword(String username, String passwordNew, String forgetToken) {
         // 检查传入的forgetToken是否为空白
         if (org.apache.commons.lang3.StringUtils.isBlank(forgetToken)) {
             return ServerResponse.createByErrorMessage("参数错误，token需要传递");
@@ -141,7 +142,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public ServerResponse <String> resetPassword(String passwordOld, String passwordNew, User user) {
+    public ServerResponse<String> resetPassword(String passwordOld, String passwordNew, User user) {
         // 防止横向越权，校验用户旧密码的同时，一定要校验用户名，否则容易被人用密码字典撞库
         int resultCount = userMapper.checkPassword(MD5Util.MD5EncodeUtf8(passwordOld), user.getId());
         if (resultCount > 0) {
@@ -157,7 +158,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public ServerResponse <User> updateInformation(User user) {
+    public ServerResponse<User> updateInformation(User user) {
         // username不更新，email更新时需要检查是否重复(除前用户的email外)
         int resultCount = userMapper.checkEmailByUserId(user.getEmail(), user.getId());
         if (resultCount > 0) {
@@ -180,7 +181,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public ServerResponse <User> getInformation(Integer userId) {
+    public ServerResponse<User> getInformation(Integer userId) {
         User user = userMapper.selectByPrimaryKey(userId);
         if (user == null) {
             return ServerResponse.createByErrorMessage("找不到用户");

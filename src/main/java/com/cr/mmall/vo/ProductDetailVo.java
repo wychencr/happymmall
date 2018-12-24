@@ -2,6 +2,7 @@ package com.cr.mmall.vo;
 
 /**
  * vo = value object
+ *
  * @author wychencr
  */
 

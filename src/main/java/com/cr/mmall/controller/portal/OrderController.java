@@ -89,7 +89,9 @@ public class OrderController {
     }
 
 
-    /** 支付模块*/
+    /**
+     * 支付模块
+     */
 
     // 订单支付(根据订单号下单，并生成支付宝的二维码url返回)
     @RequestMapping("/pay")
@@ -136,7 +138,7 @@ public class OrderController {
 
         // 验证各种数据并返回给支付宝服务器通知
         ServerResponse serverResponse = iOrderService.aliCallback(params);
-        if(serverResponse.isSuccess()) {
+        if (serverResponse.isSuccess()) {
             return Const.AlipayCallback.RESPONSE_SUCCESS;
         }
         return Const.AlipayCallback.RESPONSE_FAILED;

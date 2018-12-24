@@ -59,8 +59,8 @@ public class Main {
 
         /** 如果需要在程序中覆盖Configs提供的默认参数, 可以使用ClientBuilder类的setXXX方法修改默认参数 否则使用代码中的默认设置 */
         monitorService = new AlipayMonitorServiceImpl.ClientBuilder()
-            .setGatewayUrl("http://mcloudmonitor.com/gateway.do").setCharset("GBK")
-            .setFormat("json").build();
+                .setGatewayUrl("http://mcloudmonitor.com/gateway.do").setCharset("GBK")
+                .setFormat("json").build();
     }
 
     // 简单打印应答
@@ -69,7 +69,7 @@ public class Main {
             log.info(String.format("code:%s, msg:%s", response.getCode(), response.getMsg()));
             if (StringUtils.isNotEmpty(response.getSubCode())) {
                 log.info(String.format("subCode:%s, subMsg:%s", response.getSubCode(),
-                    response.getSubMsg()));
+                        response.getSubMsg()));
             }
             log.info("body:" + response.getBody());
         }
@@ -142,14 +142,14 @@ public class Main {
         String appAuthToken = "应用授权令牌";//根据真实值填写
 
         AlipayHeartbeatSynRequestBuilder builder = new AlipayHeartbeatSynRequestBuilder()
-            .setAppAuthToken(appAuthToken).setProduct(Product.FP).setType(Type.CR)
-            .setEquipmentId("cr1000001").setEquipmentStatus(EquipStatus.NORMAL)
-            .setTime(Utils.toDate(new Date())).setStoreId("store10001").setMac("0a:00:27:00:00:00")
-            .setNetworkType("LAN").setProviderId("2088911212323549") // 设置系统商pid
-            .setSysTradeInfoList(sysTradeInfoList) // 系统商同步trade_info信息
-            //                .setExceptionInfoList(exceptionInfoList)  // 填写异常信息，如果有的话
-            .setExtendInfo(extendInfo) // 填写扩展信息，如果有的话
-        ;
+                .setAppAuthToken(appAuthToken).setProduct(Product.FP).setType(Type.CR)
+                .setEquipmentId("cr1000001").setEquipmentStatus(EquipStatus.NORMAL)
+                .setTime(Utils.toDate(new Date())).setStoreId("store10001").setMac("0a:00:27:00:00:00")
+                .setNetworkType("LAN").setProviderId("2088911212323549") // 设置系统商pid
+                .setSysTradeInfoList(sysTradeInfoList) // 系统商同步trade_info信息
+                //                .setExceptionInfoList(exceptionInfoList)  // 填写异常信息，如果有的话
+                .setExtendInfo(extendInfo) // 填写扩展信息，如果有的话
+                ;
 
         MonitorHeartbeatSynResponse response = monitorService.heartbeatSyn(builder);
         dumpResponse(response);
@@ -174,21 +174,21 @@ public class Main {
         //        extendInfo.put("TERMINAL_ID", "1234");
 
         AlipayHeartbeatSynRequestBuilder builder = new AlipayHeartbeatSynRequestBuilder()
-            .setProduct(Product.FP)
-            .setType(Type.SOFT_POS)
-            .setEquipmentId("soft100001")
-            .setEquipmentStatus(EquipStatus.NORMAL)
-            .setTime("2015-09-28 11:14:49")
-            .setManufacturerPid("2088000000000009")
-            // 填写机具商的支付宝pid
-            .setStoreId("store200001").setEquipmentPosition("31.2433190000,121.5090750000")
-            .setBbsPosition("2869719733-065|2896507033-091").setNetworkStatus("gggbbbgggnnn")
-            .setNetworkType("3G").setBattery("98").setWifiMac("0a:00:27:00:00:00")
-            .setWifiName("test_wifi_name").setIp("192.168.1.188")
-            .setPosTradeInfoList(posTradeInfoList) // POS厂商同步trade_info信息
-            //                .setExceptionInfoList(exceptionInfoList) // 填写异常信息，如果有的话
-            .setExtendInfo(extendInfo) // 填写扩展信息，如果有的话
-        ;
+                .setProduct(Product.FP)
+                .setType(Type.SOFT_POS)
+                .setEquipmentId("soft100001")
+                .setEquipmentStatus(EquipStatus.NORMAL)
+                .setTime("2015-09-28 11:14:49")
+                .setManufacturerPid("2088000000000009")
+                // 填写机具商的支付宝pid
+                .setStoreId("store200001").setEquipmentPosition("31.2433190000,121.5090750000")
+                .setBbsPosition("2869719733-065|2896507033-091").setNetworkStatus("gggbbbgggnnn")
+                .setNetworkType("3G").setBattery("98").setWifiMac("0a:00:27:00:00:00")
+                .setWifiName("test_wifi_name").setIp("192.168.1.188")
+                .setPosTradeInfoList(posTradeInfoList) // POS厂商同步trade_info信息
+                //                .setExceptionInfoList(exceptionInfoList) // 填写异常信息，如果有的话
+                .setExtendInfo(extendInfo) // 填写扩展信息，如果有的话
+                ;
 
         MonitorHeartbeatSynResponse response = monitorService.heartbeatSyn(builder);
         dumpResponse(response);
@@ -199,7 +199,7 @@ public class Main {
         // (必填) 商户网站订单系统中唯一订单号，64个字符以内，只能包含字母、数字、下划线，
         // 需保证商户系统端不能重复，建议通过数据库sequence生成，
         String outTradeNo = "tradepay" + System.currentTimeMillis()
-                            + (long) (Math.random() * 10000000L);
+                + (long) (Math.random() * 10000000L);
 
         // (必填) 订单标题，粗略描述用户的支付目的。如“xxx品牌xxx门店消费”
         String subject = "xxx品牌xxx门店当面付消费";
@@ -254,12 +254,12 @@ public class Main {
 
         // 创建条码支付请求builder，设置请求参数
         AlipayTradePayRequestBuilder builder = new AlipayTradePayRequestBuilder()
-            //            .setAppAuthToken(appAuthToken)
-            .setOutTradeNo(outTradeNo).setSubject(subject).setAuthCode(authCode)
-            .setTotalAmount(totalAmount).setStoreId(storeId)
-            .setUndiscountableAmount(undiscountableAmount).setBody(body).setOperatorId(operatorId)
-            .setExtendParams(extendParams).setSellerId(sellerId)
-            .setGoodsDetailList(goodsDetailList).setTimeoutExpress(timeoutExpress);
+                //            .setAppAuthToken(appAuthToken)
+                .setOutTradeNo(outTradeNo).setSubject(subject).setAuthCode(authCode)
+                .setTotalAmount(totalAmount).setStoreId(storeId)
+                .setUndiscountableAmount(undiscountableAmount).setBody(body).setOperatorId(operatorId)
+                .setExtendParams(extendParams).setSellerId(sellerId)
+                .setGoodsDetailList(goodsDetailList).setTimeoutExpress(timeoutExpress);
 
         // 调用tradePay方法获取当面付应答
         AlipayF2FPayResult result = service.tradePay(builder);
@@ -289,7 +289,7 @@ public class Main {
 
         // 创建查询请求builder，设置请求参数
         AlipayTradeQueryRequestBuilder builder = new AlipayTradeQueryRequestBuilder()
-            .setOutTradeNo(outTradeNo);
+                .setOutTradeNo(outTradeNo);
 
         AlipayF2FQueryResult result = tradeService.queryTradeResult(builder);
         switch (result.getTradeStatus()) {
@@ -341,8 +341,8 @@ public class Main {
 
         // 创建退款请求builder，设置请求参数
         AlipayTradeRefundRequestBuilder builder = new AlipayTradeRefundRequestBuilder()
-            .setOutTradeNo(outTradeNo).setRefundAmount(refundAmount).setRefundReason(refundReason)
-            .setOutRequestNo(outRequestNo).setStoreId(storeId);
+                .setOutTradeNo(outTradeNo).setRefundAmount(refundAmount).setRefundReason(refundReason)
+                .setOutRequestNo(outRequestNo).setStoreId(storeId);
 
         AlipayF2FRefundResult result = tradeService.tradeRefund(builder);
         switch (result.getTradeStatus()) {
@@ -369,7 +369,7 @@ public class Main {
         // (必填) 商户网站订单系统中唯一订单号，64个字符以内，只能包含字母、数字、下划线，
         // 需保证商户系统端不能重复，建议通过数据库sequence生成，
         String outTradeNo = "tradeprecreate" + System.currentTimeMillis()
-                            + (long) (Math.random() * 10000000L);
+                + (long) (Math.random() * 10000000L);
 
         // (必填) 订单标题，粗略描述用户的支付目的。如“xxx品牌xxx门店当面付扫码消费”
         String subject = "xxx品牌xxx门店当面付扫码消费";
@@ -415,12 +415,12 @@ public class Main {
 
         // 创建扫码支付请求builder，设置请求参数
         AlipayTradePrecreateRequestBuilder builder = new AlipayTradePrecreateRequestBuilder()
-            .setSubject(subject).setTotalAmount(totalAmount).setOutTradeNo(outTradeNo)
-            .setUndiscountableAmount(undiscountableAmount).setSellerId(sellerId).setBody(body)
-            .setOperatorId(operatorId).setStoreId(storeId).setExtendParams(extendParams)
-            .setTimeoutExpress(timeoutExpress)
-            //                .setNotifyUrl("http://www.test-notify-url.com")//支付宝服务器主动通知商户服务器里指定的页面http路径,根据需要设置
-            .setGoodsDetailList(goodsDetailList);
+                .setSubject(subject).setTotalAmount(totalAmount).setOutTradeNo(outTradeNo)
+                .setUndiscountableAmount(undiscountableAmount).setSellerId(sellerId).setBody(body)
+                .setOperatorId(operatorId).setStoreId(storeId).setExtendParams(extendParams)
+                .setTimeoutExpress(timeoutExpress)
+                //                .setNotifyUrl("http://www.test-notify-url.com")//支付宝服务器主动通知商户服务器里指定的页面http路径,根据需要设置
+                .setGoodsDetailList(goodsDetailList);
 
         AlipayF2FPrecreateResult result = tradeService.tradePrecreate(builder);
         switch (result.getTradeStatus()) {
@@ -432,7 +432,7 @@ public class Main {
 
                 // 需要修改为运行机器上的路径
                 String filePath = String.format("/Users/sudo/Desktop/qr-%s.png",
-                    response.getOutTradeNo());
+                        response.getOutTradeNo());
                 log.info("filePath:" + filePath);
                 //                ZxingUtils.getQRCodeImge(response.getQrCode(), 256, filePath);
                 break;

@@ -32,6 +32,7 @@ public class Const {
         ON_SALE(1, "在售");
         private String value;
         private int code;
+
         ProductStatusEnum(int code, String value) {
             this.value = value;
             this.code = code;

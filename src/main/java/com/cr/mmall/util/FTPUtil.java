@@ -39,7 +39,7 @@ public class FTPUtil {
         boolean uploaded = false;
         FileInputStream fis = null;
         // 连接FTP服务器
-        if(connectServer(this.ip, this.port, this.user, this.pwd)) {
+        if (connectServer(this.ip, this.port, this.user, this.pwd)) {
             try {
                 logger.info("连接ftp服务器成功");
                 ftpClient.changeWorkingDirectory(remotePath);
@@ -64,7 +64,7 @@ public class FTPUtil {
                 if (fis != null) {
                     fis.close();
                 }
-                if (ftpClient.isConnected()){
+                if (ftpClient.isConnected()) {
                     ftpClient.disconnect();
                 }
             }

@@ -308,7 +308,7 @@ public class OrderServiceImpl implements IOrderService {
 
         orderVo.setShippingId(order.getShippingId());
         Shipping shipping = shippingMapper.selectByPrimaryKey(order.getShippingId());
-        if(shipping != null){
+        if (shipping != null) {
             orderVo.setReceiverName(shipping.getReceiverName());
             orderVo.setShippingVo(assembleShippingVo(shipping));
         }
@@ -322,7 +322,7 @@ public class OrderServiceImpl implements IOrderService {
         orderVo.setImageHost(PropertiesUtil.getProperty("ftp.server.http.prefix"));
 
         List<OrderItemVo> orderItemVoList = Lists.newArrayList();
-        for(OrderItem orderItem : orderItemList){
+        for (OrderItem orderItem : orderItemList) {
             OrderItemVo orderItemVo = assembleOrderItemVo(orderItem);
             orderItemVoList.add(orderItemVo);
         }
@@ -331,7 +331,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     // OrderItem --> OrderItemVo
-    private OrderItemVo assembleOrderItemVo(OrderItem orderItem){
+    private OrderItemVo assembleOrderItemVo(OrderItem orderItem) {
         OrderItemVo orderItemVo = new OrderItemVo();
         orderItemVo.setOrderNo(orderItem.getOrderNo());
         orderItemVo.setProductId(orderItem.getProductId());
@@ -346,7 +346,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     // Shipping --> ShippingShippingVo
-    private ShippingVo assembleShippingVo(Shipping shipping){
+    private ShippingVo assembleShippingVo(Shipping shipping) {
         ShippingVo shippingVo = new ShippingVo();
         shippingVo.setReceiverName(shipping.getReceiverName());
         shippingVo.setReceiverAddress(shipping.getReceiverAddress());

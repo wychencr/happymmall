@@ -60,7 +60,7 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
-    public ServerResponse <List <Category>>  getChildrenParallelCategory(Integer categoryId) {
+    public ServerResponse<List<Category>> getChildrenParallelCategory(Integer categoryId) {
         if (categoryId == null) {
             return ServerResponse.createByErrorMessage("查询品类参数错误");
         }
@@ -73,7 +73,7 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
-    public  ServerResponse<List<Integer>> selectCategoryAndChildrenById(Integer categoryId) {
+    public ServerResponse<List<Integer>> selectCategoryAndChildrenById(Integer categoryId) {
         Set<Category> categorySet = Sets.newHashSet();
         findChildCategory(categorySet, categoryId);
 

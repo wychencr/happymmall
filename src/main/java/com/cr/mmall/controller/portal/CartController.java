@@ -96,6 +96,7 @@ public class CartController {
         }
         return iCartService.selectOrUnSelect(user.getId(), productId, Const.Cart.CHECKED);
     }
+
     // 取消单选
     @RequestMapping("/un_select")
     @ResponseBody

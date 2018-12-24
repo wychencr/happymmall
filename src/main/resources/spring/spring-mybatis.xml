@@ -20,36 +20,36 @@
                         http://www.springframework.org/schema/context/spring-context.xsd">
 
     <!-- 自动扫描包 包括了控制层和服务层 -->
-    <context:component-scan base-package="com.cr.mmall" />
+    <context:component-scan base-package="com.cr.mmall"/>
     <!-- 引入数据库配置文件 -->
     <bean id="propertyConfigurer"
           class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-        <property name="location" value="classpath:jdbc.properties" />
+        <property name="location" value="classpath:jdbc.properties"/>
     </bean>
 
     <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
-        <property name="driverClassName" value="${mysql.driver}" />
-        <property name="url" value="${mysql.url}" />
-        <property name="username" value="${mysql.username}" />
-        <property name="password" value="${mysql.password}" />
+        <property name="driverClassName" value="${mysql.driver}"/>
+        <property name="url" value="${mysql.url}"/>
+        <property name="username" value="${mysql.username}"/>
+        <property name="password" value="${mysql.password}"/>
 
 
-        <property name="initialSize" value="${dbcp.initialSize}" />
-        <property name="maxActive" value="${dbcp.maxActive}" />
-        <property name="maxIdle" value="${dbcp.maxIdle}" />
-        <property name="minIdle" value="${dbcp.minIdle}" />
-        <property name="maxWait" value="${dbcp.maxWait}" />
+        <property name="initialSize" value="${dbcp.initialSize}"/>
+        <property name="maxActive" value="${dbcp.maxActive}"/>
+        <property name="maxIdle" value="${dbcp.maxIdle}"/>
+        <property name="minIdle" value="${dbcp.minIdle}"/>
+        <property name="maxWait" value="${dbcp.maxWait}"/>
     </bean>
 
     <!-- 整合Spring和MyBatis，就不需要之前的mybatis配置文件了 -->
     <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
-        <property name="dataSource" ref="dataSource" />
+        <property name="dataSource" ref="dataSource"/>
         <!-- 自动扫描mapping.xml文件 注意路径是"/"不是"."-->
-        <property name="mapperLocations" value="classpath:com/cr/mmall/mapper/*.xml" />
+        <property name="mapperLocations" value="classpath:com/cr/mmall/mapper/*.xml"/>
         <property name="configuration">
             <!--可以将之前mybatis.cfg.xml的一些配置项转移到这里来-->
             <bean class="org.apache.ibatis.session.Configuration">
-                <property name="mapUnderscoreToCamelCase" value="true" />
+                <property name="mapUnderscoreToCamelCase" value="true"/>
             </bean>
         </property>
         <!-- 分页插件 匹配的插件版本4.1.0-->
@@ -68,16 +68,16 @@
 
     <!-- 扫描DAO持久层接口 -->
     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-        <property name="basePackage" value="com.cr.mmall.mapper" />
-        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+        <property name="basePackage" value="com.cr.mmall.mapper"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
     </bean>
 
     <!-- 使用@Transactional进行声明式事务管理需要声明下面这行 -->
-    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
     <!-- 数据库事务管理 -->
     <bean id="transactionManager"
           class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-        <property name="dataSource" ref="dataSource" />
+        <property name="dataSource" ref="dataSource"/>
         <property name="rollbackOnCommitFailure" value="true"/>
     </bean>
 </beans>
